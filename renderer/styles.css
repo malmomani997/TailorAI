@@ -1,0 +1,465 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    /* Tailor 'Black & Beige' Palette */
+
+    /* BACKGROUNDS */
+    --bg-main: #f5f1ea;
+    /* Warm Beige */
+    --panel-bg: #ffffff;
+    /* White Panel */
+    --console-bg: #fafaf9;
+    /* Stone 50 (Warm White) */
+
+    /* BORDERS */
+    --border: #d6d3d1;
+    /* Stone 300 (Warm Gray) */
+
+    /* TEXT */
+    --text-primary: #1c1917;
+    /* Stone 950 (Warm Black) */
+    --text-secondary: #57534e;
+    /* Stone 600 (Warm Dark Gray) */
+    --muted: #a8a29e;
+    /* Stone 400 */
+    --text-muted: #a8a29e;
+
+    /* ACCENTS */
+    --accent-primary: #0c0a09;
+    /* Stone 950 (Almost Pure Black) */
+    --accent-hover: #000000;
+    /* Pure Black */
+
+    /* STATUS COLORS (Warm/Muted versions) */
+    --success: #15803d;
+    /* Green 700 */
+    --danger: #b91c1c;
+    /* Red 700 */
+    --warning: #b45309;
+    /* Amber 700 */
+
+    /* UI VARIABLES */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 1px 2px 0 rgb(28 25 23 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(28 25 23 / 0.1), 0 2px 4px -2px rgb(28 25 23 / 0.1);
+
+    --font-mono: "ui-monospace", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   HEADER
+   ========================= */
+
+header {
+    background: var(--panel-bg);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    z-index: 20;
+}
+
+header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+header h1 span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: #e7e5e4;
+    /* Stone 200 */
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0;
+}
+
+/* =========================
+   LAYOUT
+   ========================= */
+
+.container {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    padding: 24px 32px;
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+}
+
+.panel {
+    background: var(--panel-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    height: 100%;
+    overflow: hidden;
+}
+
+.panel h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 20px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* =========================
+   FORMS & INPUTS
+   ========================= */
+
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 16px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+label:first-of-type {
+    margin-top: 0;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #fafaf9;
+    /* Stone 50 */
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+    background: #ffffff;
+    border-color: #a8a29e;
+    /* Stone 400 */
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(12, 10, 9, 0.1);
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+/* Primary Action */
+button#submitTestCases {
+    background: var(--accent-primary);
+    color: #ffffff;
+    /* width: 100%; REMOVED to allow inline alignment */
+    /* margin-top: 16px; REMOVED to allow inline alignment */
+    width: auto;
+    margin-top: 0;
+}
+
+button#submitTestCases:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* Secondary Buttons */
+button.secondary {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+button.secondary:hover {
+    background: #fafaf9;
+    /* Stone 50 */
+    border-color: #a8a29e;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* =========================
+   TABLE
+   ========================= */
+
+.table-wrapper {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.empty-state {
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th {
+    background: #fafaf9;
+    /* Stone 50 */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    font-size: 13px;
+    background: #fff;
+    color: var(--text-primary);
+}
+
+th:nth-child(1),
+td:nth-child(1) {
+    width: 60px;
+}
+
+/* Preconditions column - constrain height */
+th:nth-child(6),
+td:nth-child(6) {
+    max-height: 120px;
+    overflow-y: auto;
+    vertical-align: top;
+    min-width: 200px;
+}
+
+/* Steps column */
+th:nth-child(7),
+td:nth-child(7) {
+    min-width: 650px;
+    vertical-align: top;
+}
+
+/* Expected column */
+th:nth-child(8),
+td:nth-child(8) {
+    max-height: 120px;
+    overflow-y: auto;
+    vertical-align: top;
+    min-width: 200px;
+}
+
+/* ... existing code ... */
+
+/* =========================
+   STEPS EDITOR (PREMIUM)
+   ========================= */
+
+.step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.step-item {
+    display: grid;
+    grid-template-columns: 24px 1fr 1fr 28px;
+    gap: 8px;
+    /* Reduced from 12px */
+    align-items: start;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    /* Reduced from 16px */
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.step-item:hover {
+    box-shadow: var(--shadow-md);
+    border-color: #a8a29e;
+    transform: translateY(-2px);
+    z-index: 5;
+}
+
+.step-num {
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding-top: 10px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.step-input {
+    min-height: 64px;
+    /* Increased from 48px/auto */
+    height: auto;
+    background: #fafaf9;
+    border: 1px solid transparent;
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    resize: vertical;
+    line-height: 1.5;
+    font-size: 13px;
+    /* Explicit font size */
+}
+
+.step-input:focus {
+    background: #ffffff;
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(12, 10, 9, 0.1);
+}
+
+.btn-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: #a8a29e;
+    background: transparent;
+    border: none;
+    padding: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: #fee2e2;
+    color: var(--danger);
+}
+
+.btn-add-step {
+    width: 100%;
+    background: #fafaf9;
+    color: var(--text-secondary);
+    border: 1px dashed #d6d3d1;
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-top: 8px;
+    outline: none;
+}
+
+.btn-add-step:hover {
+    background: #e7e5e4;
+    color: var(--text-primary);
+    border-style: solid;
+}
+
+/* =========================
+   CONSOLE
+   ========================= */
+
+.console-panel pre,
+#console {
+    margin: 0;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    height: 100%;
+    overflow-y: auto;
+    background: var(--console-bg);
+    color: var(--text-primary);
+    border-top: 1px solid var(--border);
+}
+
+/* =========================
+   FOOTER
+   ========================= */
+
+footer {
+    padding: 12px 32px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+    background: var(--bg-main);
+    border-top: 1px solid var(--border);
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Tailor AI</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+
+  <header>
+    <div>
+      <h1>Tailor AI</h1>
+      <span>Azure DevOps Test Case Manager</span>
+    </div>
+  </header>
+
+  <!-- ================= MAIN ================= -->
+
+  <div class="container">
+
+    <!-- ===== LEFT PANEL ===== -->
+
+    <div class="panel">
+      <h2>Azure DevOps</h2>
+
+      <label for="org">Organization URL</label>
+      <input id="org" placeholder="https://devops.det.gov.ae/DefaultCollection" />
+
+      <label for="pat">Personal Access Token (PAT)</label>
+      <input id="pat" type="password" placeholder="Enter your Azure DevOps PAT" />
+
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+        Create PAT in Azure DevOps: User Settings → Personal Access Tokens
+      </p>
+
+      <button id="loadProjects" class="secondary">
+        Load Projects
+      </button>
+
+      <label for="projects">Project</label>
+      <select id="projects"></select>
+
+      <label for="testPlans">Test Plan</label>
+      <select id="testPlans"></select>
+
+      <label for="suites">Test Suite</label>
+      <select id="suites"></select>
+
+      <div id="console" class="console"></div>
+    </div>
+
+    <!-- ===== RIGHT PANEL ===== -->
+
+    <div class="panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0;">Test Cases</h2>
+        <div style="display: flex; gap: 8px;">
+          <button id="exportExcel" class="secondary">Export Excel</button>
+          <button id="importExcel" class="secondary">Import Excel</button>
+          <button id="submitTestCases">Add New Test Cases</button>
+          <button id="addNewTestCase" class="secondary">+ Add New</button>
+        </div>
+      </div>
+
+      <label for="userStoryId">User Story ID (Optional)</label>
+      <input id="userStoryId" type="number" placeholder="Link test cases to a user story (optional)"
+        style="margin-bottom: 16px;" />
+
+      <div id="testCaseTable" class="table-wrapper">
+        <div class="empty-state">
+          No test cases loaded. Click "Load Projects" to begin.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer>
+    Tailor AI · Internal QA Tool
+  </footer>
+
+  <!-- ================= SCRIPT ================= -->
+
+  <script type="module" src="renderer.js"></script>
+
+</body>
+
+</html>

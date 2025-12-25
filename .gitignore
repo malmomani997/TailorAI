@@ -1,0 +1,26 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Electron
+dist/
+out/
+release/
+*.exe
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+logs/
+*.log

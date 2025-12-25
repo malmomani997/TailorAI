@@ -1,0 +1,16 @@
+{
+  "azure": {
+    "apiVersion": "7.1"
+  },
+  "workItem": {
+    "testCaseType": "Test Case",
+    "titleField": "System.Title",
+    "stepsField": "Microsoft.VSTS.TCM.Steps",
+    "expectedField": "Microsoft.VSTS.Common.ExpectedResult",
+    "preconditionField": "Microsoft.VSTS.Common.Preconditions",
+    "linkType": "Microsoft.VSTS.Common.TestedBy-Reverse"
+  },
+  "codeGen": {
+    "defaultClassName": "AzureGeneratedTests"
+  }
+}
