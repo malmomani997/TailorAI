@@ -539,6 +539,8 @@ button#submitTestCases:hover {
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
+    min-height: 57px;
+    /* 40px button + 16px padding + 1px border */
 }
 
 .panel-toolbar h2 {
@@ -797,6 +799,17 @@ td:nth-child(8) {
     display: none;
     /* hidden by default */
     margin-top: 4px;
+}
+
+.context-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 8px;
 }
 
 .user-dropdown-list.active {

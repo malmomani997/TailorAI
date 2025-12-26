@@ -71,7 +71,9 @@
         <div class="container">
           <!-- LEFT PANEL -->
           <div class="panel">
-            <h2>Azure DevOps</h2>
+            <div class="panel-toolbar">
+              <h2>Azure DevOps</h2>
+            </div>
 
             <label for="org">Organization URL</label>
             <input id="org" placeholder="https://devops.det.gov.ae/DefaultCollection" />
@@ -91,16 +93,7 @@
 
             <div style="margin-bottom: 8px;">
               <label style="margin-bottom: 4px;">Current Context</label>
-              <div id="currentContextDisplay" style="
-                  background: #fff; 
-                  border: 1px solid var(--border); 
-                  padding: 12px; 
-                  border-radius: var(--radius-sm); 
-                  font-size: 13px;
-                  color: var(--text-muted);
-                  font-style: italic;
-                  margin-bottom: 8px;
-              ">
+              <div id="currentContextDisplay" class="context-box">
                 No Plan or Suite selected.
               </div>
               <button id="openSuitePickerBtn" style="width:100%;" disabled>Select Plan & Suite</button>
