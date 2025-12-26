@@ -1197,9 +1197,10 @@ async function openModalForSuitesRecursive(plan) {
     }
 
     // Not in cache - fetch recursively with progress
-    modalTreeContainer.innerHTML = `<div style="padding:12px; text-align:center;">
-        <div>Loading hierarchy...</div>
-        <div id="hierarchyProgress" style="margin-top:8px; color:var(--text-muted); font-size:12px;">Starting...</div>
+    modalTreeContainer.innerHTML = `<div style="padding:24px; text-align:center;">
+        <div class="spinner" style="margin:0 auto 16px;"></div>
+        <div style="font-weight:500; margin-bottom:8px;">Loading hierarchy...</div>
+        <div id="hierarchyProgress" style="color:var(--text-muted); font-size:12px;">Starting...</div>
     </div>`;
 
     const progressDiv = document.getElementById("hierarchyProgress");
