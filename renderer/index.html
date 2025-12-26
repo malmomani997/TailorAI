@@ -44,18 +44,31 @@
         Create PAT in Azure DevOps: User Settings → Personal Access Tokens
       </p>
 
-      <button id="loadProjects" class="secondary">
-        Load Projects
-      </button>
-
       <label for="projects">Project</label>
-      <select id="projects"></select>
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <select id="projects" style="flex: 1;"></select>
+        <button id="loadProjects" class="secondary" style="padding: 4px 12px;" title="Reload Projects">↻</button>
+      </div>
 
-      <label for="testPlans">Test Plan</label>
-      <select id="testPlans"></select>
+      <div style="margin-bottom: 8px;">
+        <label style="margin-bottom: 4px;">Current Context</label>
+        <div id="currentContextDisplay" style="
+            background: #fff; 
+            border: 1px solid var(--border); 
+            padding: 12px; 
+            border-radius: var(--radius-sm); 
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-bottom: 8px;
+        ">
+          No Plan or Suite selected.
+        </div>
+        <button id="openSuitePickerBtn" style="width:100%;" disabled>Select Plan & Suite</button>
+      </div>
 
-      <label for="suites">Test Suite</label>
-      <select id="suites"></select>
+      <!-- Create Suite (Hidden by default) -->
+      <button id="createSuite" class="secondary" style="width:100%; display:none;">+ Create New Suite</button>
 
       <div id="console" class="console"></div>
     </div>
@@ -73,9 +86,7 @@
         </div>
       </div>
 
-      <label for="userStoryId">User Story ID (Optional)</label>
-      <input id="userStoryId" type="number" placeholder="Link test cases to a user story (optional)"
-        style="margin-bottom: 16px;" />
+
 
       <div id="testCaseTable" class="table-wrapper">
         <div class="empty-state">
@@ -95,6 +106,29 @@
   <!-- ================= SCRIPT ================= -->
 
   <script type="module" src="renderer.js"></script>
+
+  <!-- Datalist for User Autocomplete -->
+  <datalist id="projectUsersList"></datalist>
+
+  <!-- SUITE PICKER MODAL -->
+  <div id="suitePickerModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Select Test Plan</h3>
+        <button id="closeSuitePicker" class="secondary" style="padding: 4px 12px;">Close</button>
+      </div>
+      <div class="modal-body">
+        <!-- Back Button for Drill Down -->
+        <div id="modalBackContainer" style="margin-bottom:12px; display:none;">
+          <button id="modalBackToPlans" class="modal-back-btn">← Back to Plans</button>
+        </div>
+
+        <div id="modalTreeContainer" class="suite-tree-container">
+          <!-- Tree content goes here -->
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 

@@ -307,6 +307,13 @@ td:nth-child(1) {
     width: 60px;
 }
 
+/* Assigned To column */
+th:nth-child(4),
+td:nth-child(4) {
+    width: 300px;
+    min-width: 250px;
+}
+
 /* Preconditions column - constrain height */
 th:nth-child(6),
 td:nth-child(6) {
@@ -391,6 +398,80 @@ td:nth-child(8) {
     /* Explicit font size */
 }
 
+/* Explicit font size */
+}
+
+.assign-input {
+    height: 36px;
+    padding: 8px 12px;
+    background: #fafaf9;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    width: 100%;
+}
+
+.assign-input:focus {
+    background: #ffffff;
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(12, 10, 9, 0.1);
+}
+
+/* Smart User Picker */
+.user-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.user-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+    /* hidden by default */
+    margin-top: 4px;
+}
+
+.user-dropdown-list.active {
+    display: block;
+}
+
+.user-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-item:hover {
+    background-color: #f3f4f6;
+}
+
+.user-item .name {
+    font-weight: 500;
+    color: #111827;
+}
+
+.user-item .email {
+    font-size: 11px;
+    color: #6b7280;
+}
+
 .step-input:focus {
     background: #ffffff;
     border-color: var(--accent-primary);
@@ -462,4 +543,223 @@ footer {
     text-align: center;
     background: var(--bg-main);
     border-top: 1px solid var(--border);
+}
+
+/* ===============================
+   SUITE TREE VIEW
+   =============================== */
+.suite-tree-container {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    /* height: 300px; Remove fixed height */
+    height: calc(100vh - 280px);
+    /* Dynamic height */
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 12px;
+    font-size: 14px;
+    /* Bigger font */
+}
+
+.suite-tree-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    border-bottom: 1px solid transparent;
+    /* subtle separation? or none */
+    transition: background-color 0.1s;
+    user-select: none;
+}
+
+.suite-tree-item:hover {
+    background-color: #f5f5f4;
+    /* Stone 100 */
+}
+
+.suite-tree-item.active {
+    background-color: #e7e5e4;
+    /* Stone 200 */
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+/* ... existing ... */
+.suite-tree-item .icon {
+    margin-right: 4px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.suite-tree-item.active .icon {
+    color: var(--accent-primary);
+}
+
+.caret-icon {
+    font-size: 10px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: transform 0.1s;
+    user-select: none;
+}
+
+/* ... existing ... */
+.caret-icon:hover {
+    color: var(--text-primary);
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+/* Plan List Item (Card Style) */
+.plan-list-item {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.15s ease;
+    background: #fff;
+    margin-bottom: 1px;
+}
+
+.plan-list-item:hover {
+    background: var(--bg-main);
+    padding-left: 16px;
+    /* Sliding effect */
+}
+
+.plan-list-item .icon {
+    font-size: 16px;
+    margin: 0;
+}
+
+.plan-list-item .name {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.suite-label {
+    /* Allow wrapping */
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 14px;
+    /* Larger font */
+    line-height: 1.5;
+    padding: 6px 0;
+    /* Better touch target */
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.suite-label:hover {
+    background-color: var(--bg-hover);
+    /* Subtle highlight */
+}
+
+.suite-tree-container {
+    /* Update existing to be cleaner if needed */
+    background-color: #fff;
+}
+
+.suite-children {
+    /* transition? */
+}
+
+/* Scrollbar styling for the tree */
+.suite-tree-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.suite-tree-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.suite-tree-container::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 4px;
+}
+
+/* ===============================
+   MODAL STYLES
+   =============================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background: #fff;
+    width: 90%;
+    max-width: 1200px;
+    height: 90vh;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.modal-back-btn:hover {
+    background: var(--bg-main);
+    border-color: var(--text-secondary);
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Override tree height for modal */
+#modalTreeContainer {
+    height: 100%;
+    /* Fill available space */
 }

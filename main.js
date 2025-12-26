@@ -6,11 +6,14 @@ const {
     fetchProjects,
     fetchTestPlans,
     fetchSuites,
+    fetchSuiteHierarchyRecursive,
     createSuite,
     createTestCase,
     addTestCaseToSuite,
     fetchTestCasesFromSuite,
-    updateTestCase
+    updateTestCase,
+    fetchProjectUsers,
+    searchIdentities
 } = require("./services/azureClient");
 
 let mainWindow;
@@ -94,6 +97,15 @@ ipcMain.handle("fetch-projects", async (_, { orgUrl, pat }) => {
     return await fetchProjects(orgUrl, pat);
 });
 
+ipcMain.handle("fetch-project-users", async (_, payload) => {
+    // The original `if (!pat) throw new Error("PAT is required");` check was removed as per instruction's implied change.
+    return await fetchProjectUsers(payload.orgUrl, payload.project, payload.pat);
+});
+
+ipcMain.handle("search-identities", async (_, payload) => {
+    return await searchIdentities(payload.orgUrl, payload.project, payload.pat, payload.query);
+});
+
 ipcMain.handle("fetch-testplans", async (_, { orgUrl, project, pat }) => {
     if (!pat) throw new Error("PAT is required");
     return await fetchTestPlans(orgUrl, project, pat);
@@ -102,6 +114,17 @@ ipcMain.handle("fetch-testplans", async (_, { orgUrl, project, pat }) => {
 ipcMain.handle("fetch-suites", async (_, { orgUrl, project, planId, pat }) => {
     if (!pat) throw new Error("PAT is required");
     return await fetchSuites(orgUrl, project, planId, pat);
+});
+
+ipcMain.handle("fetch-suite-hierarchy", async (event, { orgUrl, project, planId, pat }) => {
+    if (!pat) throw new Error("PAT is required");
+
+    // Progress callback - send to renderer
+    const onProgress = (progress) => {
+        event.sender.send("suite-hierarchy-progress", progress);
+    };
+
+    return await fetchSuiteHierarchyRecursive(orgUrl, project, planId, pat, onProgress);
 });
 
 /* =====================================================
@@ -133,7 +156,10 @@ ipcMain.handle("create-testcases", async (_, payload) => {
                     title: tc.title,
                     steps: tc.steps || "",
                     preconditions: tc.preconditions || "",
-                    expected: tc.expected || ""
+
+                    expected: tc.expected || "",
+                    assignedTo: tc.assignedTo || "",
+                    testType: tc.testType || "Positive"
                 }
             });
 

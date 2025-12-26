@@ -10,8 +10,20 @@ const patInput = document.getElementById("pat");
 const loadProjectsBtn = document.getElementById("loadProjects");
 
 const projectSelect = document.getElementById("projects");
-const testPlanSelect = document.getElementById("testPlans");
-const suiteSelect = document.getElementById("suites");
+const openSuitePickerBtn = document.getElementById("openSuitePickerBtn");
+const currentContextDisplay = document.getElementById("currentContextDisplay");
+const createSuiteBtn = document.getElementById("createSuite");
+// const testPlanSelect = document.getElementById("testPlans"); // Removed
+
+// Modal Elements
+// Modal Elements
+const suitePickerModal = document.getElementById("suitePickerModal");
+const closeSuitePickerBtn = document.getElementById("closeSuitePicker");
+const modalTreeContainer = document.getElementById("modalTreeContainer");
+// New Modal Elements
+const modalTitle = document.getElementById("modalTitle");
+const modalBackContainer = document.getElementById("modalBackContainer");
+const modalBackBtn = document.getElementById("modalBackToPlans");
 
 const consoleBox = document.getElementById("console");
 const testCaseTable = document.getElementById("testCaseTable");
@@ -19,7 +31,8 @@ const testCaseTable = document.getElementById("testCaseTable");
 const importExcelBtn = document.getElementById("importExcel");
 const submitTestCasesBtn = document.getElementById("submitTestCases");
 const addNewTestCaseBtn = document.getElementById("addNewTestCase");
-const userStoryIdInput = document.getElementById("userStoryId");
+// const userStoryIdInput = document.getElementById("userStoryId"); // Removed
+// const userStoryIdInput = document.getElementById("userStoryId"); // Removed
 
 // -------------------------------
 // State
@@ -27,6 +40,12 @@ const userStoryIdInput = document.getElementById("userStoryId");
 let selectedProject = null;
 let selectedPlanId = null;
 let selectedSuiteId = null;
+let projectUsers = [];
+let cachedPlans = []; // Store plans for back navigation
+
+// Suite Hierarchy Cache
+const suiteHierarchyCache = new Map(); // key: `${project}-${planId}`
+const backgroundFetches = new Map(); // track ongoing fetches
 
 let testCases = [];
 let existingTestCases = [];
@@ -82,6 +101,9 @@ function escapeHtml(text) {
 // ===============================
 // PROJECTS
 // ===============================
+// ===============================
+// PROJECTS
+// ===============================
 loadProjectsBtn.onclick = async () => {
     try {
         const inputs = validateInputs();
@@ -91,8 +113,9 @@ loadProjectsBtn.onclick = async () => {
         const projects = await window.api.fetchProjects(inputs);
 
         projectSelect.innerHTML = `<option disabled selected>Select Project</option>`;
-        testPlanSelect.innerHTML = "";
-        suiteSelect.innerHTML = "";
+        // Reset other UI
+        openSuitePickerBtn.disabled = true;
+        currentContextDisplay.textContent = "No Plan or Suite selected.";
 
         projects.forEach(p => {
             const opt = document.createElement("option");
@@ -107,88 +130,525 @@ loadProjectsBtn.onclick = async () => {
     }
 };
 
-projectSelect.onchange = async () => {
-    selectedProject = projectSelect.value;
-    selectedPlanId = null;
-    selectedSuiteId = null;
-
-    testPlanSelect.innerHTML = "";
-    suiteSelect.innerHTML = "";
-
-    await fetchTestPlans();
-};
-
-// ===============================
-// TEST PLANS
-// ===============================
-async function fetchTestPlans() {
+async function fetchProjectUsers() {
     try {
         const inputs = validateInputs();
         if (!inputs || !selectedProject) return;
 
-        log("Fetching test plans...");
-        const plans = await window.api.fetchTestPlans({
+        log("Fetching project users...");
+        projectUsers = await window.api.fetchProjectUsers({
             ...inputs,
             project: selectedProject
         });
+        log(`Loaded ${projectUsers.length} users`, "success");
 
-        testPlanSelect.innerHTML = `<option disabled selected>Select Test Plan</option>`;
-        suiteSelect.innerHTML = "";
+        // Populate Datalist
+        const datalist = document.getElementById("projectUsersList");
+        datalist.innerHTML = projectUsers.map(u => `<option value="${u.displayName}">`).join("");
 
-        plans.forEach(plan => {
-            const opt = document.createElement("option");
-            opt.value = plan.id;
-            opt.textContent = plan.name;
-            testPlanSelect.appendChild(opt);
-        });
-
-        log(`Loaded ${plans.length} test plans`, "success");
     } catch (err) {
-        log(`Failed to load test plans: ${err.message}`, "error");
+        log(`Failed to load users: ${err.message}`, "error");
+        projectUsers = [];
     }
 }
 
-testPlanSelect.onchange = async () => {
-    selectedPlanId = Number(testPlanSelect.value);
-    selectedSuiteId = null;
 
-    suiteSelect.innerHTML = "";
-    await fetchSuites();
+
+
+
+// ===============================
+// SMART USER SEARCH (GLOBAL DROPDOWN)
+// ===============================
+let searchTimeout = null;
+let activeRowIndex = null;
+let globalDropdown = null;
+
+// Initialize global dropdown
+function initGlobalDropdown() {
+    if (globalDropdown) return;
+    globalDropdown = document.createElement("div");
+    globalDropdown.className = "user-dropdown-list";
+    globalDropdown.style.position = "fixed"; // Force fixed
+    globalDropdown.style.maxHeight = "300px"; // Taller
+    document.body.appendChild(globalDropdown);
+    log("Global user dropdown initialized", "info");
+}
+
+// Call immediately if document body is ready (which it should be if script is at end)
+if (document.body) {
+    initGlobalDropdown();
+} else {
+    document.addEventListener("DOMContentLoaded", initGlobalDropdown);
+}
+
+window.handleUserSearch = async (query, index) => {
+    if (!globalDropdown) return;
+
+    activeRowIndex = index;
+    const input = document.getElementById(`assign-input-${index}`);
+    if (!input) return;
+
+    // Position the dropdown
+    const rect = input.getBoundingClientRect();
+    globalDropdown.style.top = (rect.bottom + 2) + "px";
+    globalDropdown.style.left = rect.left + "px";
+    globalDropdown.style.width = rect.width + "px";
+
+    // Show loading or local filter first
+    if (!query) {
+        renderUserList(projectUsers.slice(0, 10));
+        return;
+    }
+
+    // 1. Filter local users
+    const localMatches = projectUsers.filter(u =>
+        u.displayName.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 10); // Show more local matches
+
+    renderUserList(localMatches, true /* isSearching */);
+
+    if (query.length < 3) return;
+
+    // 2. Debounced Remote Search
+    if (searchTimeout) clearTimeout(searchTimeout);
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            log(`Searching directory for "${query}"...`);
+            const inputs = validateInputs();
+            const remoteMatches = await window.api.searchIdentities({
+                ...inputs,
+                project: selectedProject,
+                query
+            });
+
+            const combined = [...localMatches];
+            remoteMatches.forEach(rm => {
+                if (!combined.find(c => c.displayName === rm.displayName)) {
+                    combined.push(rm);
+                }
+            });
+
+            renderUserList(combined, false);
+
+        } catch (err) {
+            console.error(err);
+        }
+    }, 400);
+};
+
+function renderUserList(users, isSearching = false) {
+    if (!globalDropdown) return;
+
+    if (users.length === 0 && !isSearching) {
+        globalDropdown.innerHTML = `<div class="user-item" style="color:#9ca3af;font-style:italic;">No users found</div>`;
+        globalDropdown.classList.add("active");
+        return;
+    }
+
+    globalDropdown.innerHTML = users.map(u => `
+        <div class="user-item" onmousedown="selectUser('${escapeHtml(u.displayName)}', '${escapeHtml(u.uniqueName || "")}')">
+            <span class="name">${escapeHtml(u.displayName)}</span>
+            ${u.uniqueName ? `<span class="email">${escapeHtml(u.uniqueName)}</span>` : ''}
+        </div>
+    `).join("");
+
+    if (isSearching) {
+        globalDropdown.innerHTML += `<div class="user-item" style="color:#6b7280;font-style:italic;font-size:11px;">Searching...</div>`;
+    }
+
+    globalDropdown.classList.add("active");
+}
+
+window.selectUser = (displayName, uniqueName) => {
+    if (activeRowIndex === null) return;
+
+    const i = activeRowIndex;
+
+    // Update state
+    testCases[i].assignedTo = displayName;
+    testCases[i]._modified = true;
+
+    // Cache user
+    if (!projectUsers.find(u => u.displayName === displayName)) {
+        projectUsers.push({ displayName, uniqueName });
+    }
+
+    // Update UI immediately (lightweight)
+    const input = document.getElementById(`assign-input-${i}`);
+    if (input) input.value = displayName;
+
+    // Hide dropdown
+    if (globalDropdown) globalDropdown.classList.remove("active");
+
+    // Full render to ensure consistency (delay slightly to avoid jarring input replacement)
+    // setTimeout(() => renderTestCaseTable(), 50); 
+    // Actually, just full render is fine, but it kills focus. 
+    // Since we just clicked, we don't hold focus. 
+    renderTestCaseTable();
+};
+
+window.hideUserListDelayed = () => {
+    // 200ms delay to allow click to register
+    setTimeout(() => {
+        if (globalDropdown) globalDropdown.classList.remove("active");
+        activeRowIndex = null;
+    }, 200);
 };
 
 // ===============================
-// SUITES
+// UNIFIED TREE (PLANS + SUITES)
 // ===============================
-async function fetchSuites() {
+
+// 1. Project Change
+projectSelect.onchange = async () => {
+    selectedProject = projectSelect.value;
+    selectedPlanId = null;
+    selectedSuiteId = null;
+    cachedPlans = [];
+
+    // Reset Context Display
+    currentContextDisplay.innerHTML = `<span style="color:var(--text-muted)">No Plan or Suite selected.</span>`;
+    openSuitePickerBtn.disabled = true;
+    openSuitePickerBtn.textContent = "Select Plan & Suite";
+    createSuiteBtn.style.display = "none";
+
+    // Fetch Project Users (Background)
+    fetchProjectUsers();
+
+    // Enable "Select" button immediately (User clicks to load plans)
+    openSuitePickerBtn.disabled = false;
+};
+
+// 2. Open Modal (Triggers Plan Load)
+openSuitePickerBtn.onclick = () => {
+    if (!selectedProject) return;
+    openModalForPlans();
+};
+
+closeSuitePickerBtn.onclick = () => { suitePickerModal.style.display = "none"; };
+
+// 3. View 1: List Plans
+async function openModalForPlans() {
+    suitePickerModal.style.display = "flex";
+    modalTitle.textContent = "Select Test Plan";
+    modalBackContainer.style.display = "none";
+    modalTreeContainer.innerHTML = `<div style="padding:12px; text-align:center;">Loading Plans...</div>`;
+
+    const inputs = validateInputs();
+
     try {
-        const inputs = validateInputs();
-        if (!inputs || !selectedPlanId) return;
+        // Fetch or use cached plans
+        if (cachedPlans.length === 0) {
+            cachedPlans = await window.api.fetchTestPlans({ ...inputs, project: selectedProject });
+        }
 
-        log("Fetching test suites...");
-        const suites = await window.api.fetchSuites({
-            ...inputs,
-            project: selectedProject,
-            planId: selectedPlanId
-        });
+        renderPlanListInModal(cachedPlans);
 
-        suiteSelect.innerHTML = `<option disabled selected>Select Suite</option>`;
-
-        suites.forEach(suite => {
-            const opt = document.createElement("option");
-            opt.value = suite.id;
-            opt.textContent = suite.name;
-            suiteSelect.appendChild(opt);
-        });
-
-        log(`Loaded ${suites.length} suites`, "success");
     } catch (err) {
-        log(`Failed to load suites: ${err.message}`, "error");
+        modalTreeContainer.innerHTML = `<div style="color:var(--danger); padding:12px;">Failed to load plans: ${err.message}</div>`;
     }
 }
 
-suiteSelect.onchange = async () => {
-    selectedSuiteId = Number(suiteSelect.value);
+function renderPlanListInModal(plans) {
+    if (plans.length === 0) {
+        modalTreeContainer.innerHTML = `<div style="padding:12px; text-align:center;">No Test Plans found.</div>`;
+        return;
+    }
+
+    modalTreeContainer.innerHTML = "";
+
+    plans.forEach(plan => {
+        const item = document.createElement("div");
+        item.className = "suite-tree-item";
+        item.style.padding = "10px 12px";
+        item.style.borderBottom = "1px solid var(--border)";
+
+        item.innerHTML = `
+            <span class="icon">📋</span>
+            <span class="suite-label" style="font-weight:600;">${escapeHtml(plan.name)}</span>
+            <span style="margin-left:auto; color:var(--text-muted); font-size:11px;">#${plan.id}</span>
+        `;
+
+        item.onclick = () => {
+            openModalForSuites(plan);
+        };
+
+        modalTreeContainer.appendChild(item);
+    });
+}
+
+// Unified Tree Renderer
+// 4. View 2: List Suites (Drill Down)
+async function openModalForSuites(plan) {
+    return openModalForSuitesRecursive(plan);
+}
+
+/*
+    selectedPlanId = plan.id;
+
+
+    modalTitle.textContent = `Suites in "${plan.name}"`;
+    modalBackContainer.style.display = "block"; // Show Back Button
+    modalTreeContainer.innerHTML = `<div style="padding:12px; text-align:center;">Loading Suites...</div>`;
+
+    // Back Button Logic
+    modalBackBtn.onclick = () => {
+        openModalForPlans(); // Go back to Level 1
+    };
+
+    // Enable "Create Suite" now that we have a plan
+    createSuiteBtn.style.display = "block";
+
+    const inputs = validateInputs();
+    try {
+        const suites = await window.api.fetchSuites({
+            ...inputs,
+            project: selectedProject,
+            planId: plan.id
+        });
+
+        console.log("DEBUG: Fetched Suites:", suites);
+        log(`DEBUG: Fetched ${suites ? suites.length : 0} suites for plan ${plan.id}`);
+
+        // Recursively normalize 'suites' property to 'children' for asTreeView response
+        function normalizeSuites(suite) {
+            if (suite.suites && !suite.children) {
+                suite.children = suite.suites;
+            }
+            if (suite.children && suite.children.length > 0) {
+                suite.children.forEach(child => normalizeSuites(child));
+            } else if (!suite.children) {
+                suite.children = [];
+            }
+        }
+
+        // Normalize all fetched suites recursively
+        suites.forEach(s => normalizeSuites(s));
+
+        // Hierarchy Logic
+        let rootSuites = [];
+
+        // Strategy: 'expand=true' gives us a flat list where some items (roots & others)
+        // have their 'children' arrays populated with IDs or objects.
+        // We MUST NOT clear these children. Instead, we must find the "True Roots"
+        // by filtering out any suite that appears in another suite's children list.
+
+        console.log("[Hierarchy] Building Tree via Child-Reference Filter...");
+
+        const suiteMap = new Map();
+        const allChildIds = new Set();
+
+        // 1. Map & Collect Child Refs
+        suites.forEach(s => {
+            suiteMap.set(Number(s.id), s);
+
+            // Normalize 'suites' (ADO) to 'children' (Renderer)
+            if (s.suites && !s.children) {
+                s.children = s.suites;
+            }
+
+            // If API provided children (from expand=true), collect their IDs
+            if (s.children && s.children.length > 0) {
+                s.children.forEach(child => {
+                    const cId = child.id ? Number(child.id) : Number(child);
+                    allChildIds.add(cId);
+                });
+            } else {
+                // Ensure array exists if missing
+                if (!s.children) s.children = [];
+            }
+        });
+
+        // 2. Identify Roots (Items NOT referenced as children)
+        // AND ensure we link objects if children are just IDs/partial objects
+        suites.forEach(s => {
+            // Re-map children to full objects from our map if possible
+            // (API might return shallow objects in children array)
+            if (s.children.length > 0) {
+                s.children = s.children.map(child => {
+                    const cId = child.id ? Number(child.id) : Number(child);
+                    return suiteMap.get(cId) || child;
+                });
+            }
+
+            // If this suite is NOT a child of any other suite, it is a Root.
+            if (!allChildIds.has(Number(s.id))) {
+                rootSuites.push(s);
+            }
+        });
+
+        console.log(`[Hierarchy] Roots: ${rootSuites.length} (Total Fetched: ${suites.length})`);
+
+        modalTreeContainer.innerHTML = "";
+
+        // With asTreeView, we typically get one root suite containing the hierarchy
+        // Render its children directly to show the structure
+        if (suites.length > 0 && suites[0].children && suites[0].children.length > 0) {
+            console.log(`[Hierarchy] Rendering ${suites[0].children.length} top-level suites from root`);
+            renderModalSuiteTree(suites[0].children, modalTreeContainer, 0, plan);
+        } else {
+            // Fallback: render all suites as roots
+            renderModalSuiteTree(suites, modalTreeContainer, 0, plan);
+        }
+
+    } catch (err) {
+        modalTreeContainer.innerHTML = `<div style="color:var(--danger); padding:12px;">Failed to load suites: ${err.message}</div>`;
+    }
+} */
+
+// 5. Suite Renderer
+function renderModalSuiteTree(suites, container, depth, plan) {
+    suites.forEach(suite => {
+        const row = document.createElement("div");
+        row.className = "suite-tree-item";
+        row.style.paddingLeft = `${12 + (depth * 20)}px`;
+
+        const hasChildren = suite.children && suite.children.length > 0;
+
+        const caret = document.createElement("span");
+        caret.className = "caret-icon";
+        // Use geometric shape for cleaner look
+        caret.textContent = hasChildren ? "▸" : "";
+        caret.style.display = "inline-block";
+        caret.style.width = "20px";
+        caret.style.textAlign = "center";
+        caret.style.transition = "transform 0.2s ease";
+
+        const icon = document.createElement("span");
+        icon.className = "icon";
+        icon.textContent = "📁";
+        icon.style.marginRight = "6px";
+
+        const label = document.createElement("span");
+        label.className = "suite-label";
+        label.textContent = suite.name;
+
+        row.appendChild(caret);
+        row.appendChild(icon);
+        row.appendChild(label);
+
+        const childrenContainer = document.createElement("div");
+        childrenContainer.className = "suite-children";
+        childrenContainer.style.display = "none";
+        // Indent children slightly more
+        childrenContainer.style.marginLeft = "8px";
+
+        container.appendChild(row);
+        container.appendChild(childrenContainer);
+
+        // Click Row -> Select Suite & Close
+        row.onclick = (e) => {
+            e.stopPropagation();
+            selectSuite(plan, suite);
+        };
+
+        // Click Caret -> Expand
+        caret.onclick = (e) => {
+            e.stopPropagation();
+            if (hasChildren) {
+                const isClosed = childrenContainer.style.display === "none";
+                childrenContainer.style.display = isClosed ? "block" : "none";
+                // Rotate caret
+                caret.style.transform = isClosed ? "rotate(90deg)" : "rotate(0deg)";
+                // Toggle folder icon
+                icon.textContent = isClosed ? "📂" : "📁";
+
+                // Lazy Render / Recursive Render ONLY if empty
+                // This prevents re-rendering on collapse/expand
+                if (childrenContainer.innerHTML === "") {
+                    renderModalSuiteTree(suite.children, childrenContainer, depth + 1, plan);
+                }
+            }
+        }
+    });
+}
+
+// Fetch Suites Logic (Lazy Load)
+// 6. Final Selection
+async function selectSuite(plan, suite) {
+    selectedSuiteId = suite.id;
+
+    // Update Sidebar Context
+    currentContextDisplay.innerHTML = `
+        <div style="font-weight:600; color:var(--text-primary); margin-bottom:4px;">${escapeHtml(plan.name)}</div>
+        <div style="font-size:12px;">📁 ${escapeHtml(suite.name)}</div>
+    `;
+    currentContextDisplay.style.color = "var(--text-primary)";
+
+    suitePickerModal.style.display = "none";
+
+    // Reset button text
+    openSuitePickerBtn.textContent = "Change Plan / Suite";
+
     await fetchTestCasesFromSuite();
+}
+
+createSuiteBtn.onclick = async () => {
+    // Basic validation
+    const inputs = validateInputs();
+    if (!inputs || !selectedProject || !selectedPlanId) {
+        alert("Please select a Project and Test Plan first.");
+        return;
+    }
+
+    const suiteName = prompt("Enter new Suite Name:");
+    if (!suiteName) return;
+
+    try {
+        log(`Creating suite "${suiteName}"...`);
+        /* 
+           Note: The backend createSuite handles creating a "RequirementSuite" or "StaticSuite"
+           defaulting to Static if not specified.
+        */
+        await window.api.createSuite({
+            ...inputs,
+            project: selectedProject,
+            planId: selectedPlanId,
+            suiteName
+        });
+
+        log(`Suite "${suiteName}" created!`, "success");
+
+        // If the modal is currently open on this plan, refresh it?
+        // Ideally yes, but for now we can rely on user re-opening to see it.
+        // Or if we want to be fancy, check if modal is open:
+        if (suitePickerModal.style.display === "flex" && selectedPlanId) {
+            // Find the plan object from cachedPlans?
+            const plan = cachedPlans.find(p => p.id === selectedPlanId);
+            if (plan) openModalForSuites(plan);
+        }
+
+    } catch (err) {
+        log(`Failed to create suite: ${err.message}`, "error");
+    }
+};
+
+createSuiteBtn.onclick = async () => {
+    const inputs = validateInputs();
+    if (!inputs || !selectedProject || !selectedPlanId) {
+        alert("Please select a Project and Test Plan first.");
+        return;
+    }
+
+    const suiteName = prompt("Enter new Suite Name:");
+    if (!suiteName) return;
+
+    try {
+        log(`Creating suite "${suiteName}"...`);
+        const newSuite = await window.api.createSuite({
+            ...inputs,
+            project: selectedProject,
+            planId: selectedPlanId,
+            suiteName
+        });
+
+        log(`Suite "${suiteName}" created!`, "success");
+        await fetchSuites();
+
+    } catch (err) {
+        log(`Failed to create suite: ${err.message}`, "error");
+    }
 };
 
 // ===============================
@@ -313,7 +773,7 @@ function renderTestCaseTable() {
           <th style="width:60px">ID</th>
           <th style="width:90px">Type</th>
           <th style="width:100px">State</th>
-          <th style="width:150px">Assigned To</th>
+          <th style="width:300px">Assigned To</th>
           <th style="width:250px">Title</th>
           <th>Preconditions</th>
           <th>Steps</th>
@@ -357,7 +817,33 @@ function renderTestCaseTable() {
 
             <!-- Read-only metadata -->
             <td><span class="${stateClass}">${escapeHtml(tc.state || "Design")}</span></td>
-            <td style="font-size:12px;color:var(--muted)">${escapeHtml(tc.assignedTo || "-")}</td>
+            
+            <!-- Smart User Picker -->
+            <td style="overflow:visible;"> <!-- overflow visible needed for dropdown -->
+                <div class="user-dropdown-container">
+                    <input 
+                        id="assign-input-${i}"
+                        class="assign-input" 
+                        value="${escapeHtml(tc.assignedTo || "")}" 
+                        placeholder="Search user..."
+                        onfocus="handleUserSearch(this.value, ${i})"
+                        oninput="handleUserSearch(this.value, ${i})"
+                        onblur="hideUserListDelayed()"
+                        autocomplete="off"
+                        style="padding-right: 30px;"
+                    />
+                    
+                    ${tc.assignedTo ? `
+                    <button 
+                        onclick="updateLocal(${i}, 'assignedTo', '')"
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px;"
+                        title="Clear Assignment"
+                    >✕</button>
+                    ` : `
+                    <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #d1d5db; pointer-events:none;">🔍</span>
+                    `}
+                </div>
+            </td>
 
             <!-- Editable Fields -->
             <td contenteditable="true" 
@@ -398,10 +884,21 @@ function renderTestCaseTable() {
 // ROW ACTIONS
 // ===============================
 window.updateLocal = (i, field, value) => {
+    // Determine if value actually changed
     if (testCases[i][field] !== value) {
         testCases[i][field] = value;
         testCases[i]._modified = true;
-        renderTestCaseTable();
+
+        // Find the row and mark it as modified visually
+        // Do NOT call renderTestCaseTable() here as it kills focus/cursor position
+        const row = document.querySelector(`tr[data-index="${i}"]`);
+        if (row) {
+            if (testCases[i].isExisting) {
+                row.setAttribute('data-modified', 'true');
+            } else {
+                row.setAttribute('data-new', 'true');
+            }
+        }
     }
 };
 
@@ -440,6 +937,8 @@ window.removeStep = (tcIndex, stepIndex) => {
     renderTestCaseTable();
 };
 
+renderTestCaseTable();
+
 window.saveTestCase = async (i) => {
     const tc = testCases[i];
     const inputs = validateInputs();
@@ -449,6 +948,10 @@ window.saveTestCase = async (i) => {
         const finalSteps = serializeSteps(tc.steps);
 
         log(`Saving test case #${tc.id}...`);
+        // Resolve display name to unique name (email) if possible
+        // FIX: Use Display Name directly (same as creation logic)
+        const resolvedAssignedTo = tc.assignedTo;
+
         await window.api.updateTestCase({
             ...inputs,
             project: selectedProject,
@@ -458,7 +961,8 @@ window.saveTestCase = async (i) => {
                 preconditions: tc.preconditions,
                 steps: finalSteps,
                 expected: tc.expected,
-                testType: tc.testType
+                testType: tc.testType,
+                assignedTo: resolvedAssignedTo
             }
         });
         tc._modified = false;
@@ -566,6 +1070,7 @@ addNewTestCaseBtn.onclick = () => {
         preconditions: "",
         steps: [{ action: "", expected: "" }], // Default structured step
         expected: "",
+        assignedTo: "", // Default unassigned
         isExisting: false
     });
     renderTestCaseTable();
@@ -588,28 +1093,53 @@ submitTestCasesBtn.onclick = async () => {
         submitTestCasesBtn.disabled = true;
         log(`Creating ${newCases.length} test cases...`);
 
-        // Prepare proper XML for creation
-        const payloadCases = newCases.map(tc => ({
-            ...tc,
-            steps: serializeSteps(tc.steps)
-        }));
+        // Prepare proper creation payload with resolved user
+        const payloadCases = newCases.map(tc => {
+            // FIX: Use Display Name directly. 
+            // Azure DevOps REST API prefers Display Name for System.AssignedTo 
+            // and resolves it internally. Using uniqueName (alias) often fails.
+            const resolvedAssignedTo = tc.assignedTo;
+
+            return {
+                ...tc,
+                steps: serializeSteps(tc.steps),
+                assignedTo: resolvedAssignedTo
+            };
+        });
 
         const created = await window.api.createTestCases({
             ...inputs,
             project: selectedProject,
             testCases: payloadCases,
-            userStoryId: userStoryIdInput.value || null
-        });
-
-        await window.api.addTestCaseToSuite({
-            ...inputs,
             project: selectedProject,
-            planId: selectedPlanId,
-            suiteId: selectedSuiteId,
-            testCaseIds: created.map(c => c.id)
+            testCases: payloadCases,
+            userStoryId: null // Force null as feature is removed
         });
 
-        log(`Added ${created.length} test cases to suite`, "success");
+        // specific filter for successful creations
+        const successfulIds = created
+            .filter(c => c.success && c.id)
+            .map(c => c.id);
+
+        if (successfulIds.length > 0) {
+            await window.api.addTestCaseToSuite({
+                ...inputs,
+                project: selectedProject,
+                planId: selectedPlanId,
+                suiteId: selectedSuiteId,
+                testCaseIds: successfulIds
+            });
+            log(`Added ${successfulIds.length} test cases to suite`, "success");
+        }
+
+        if (created.length > successfulIds.length) {
+            const failedCount = created.length - successfulIds.length;
+            log(`Warning: ${failedCount} test cases failed to be created/linked.`, "warning");
+
+            created.filter(c => !c.success).forEach(c => {
+                log(`Error creating "${c.title}": ${c.error}`, "error");
+            });
+        }
         await fetchTestCasesFromSuite();
     } catch (err) {
         log(`Failed to submit test cases: ${err.message}`, "error");
@@ -630,4 +1160,82 @@ function getTestType(title) {
         return "Negative";
     }
     return "Positive";
+}
+
+// ============================================
+// FIX: Recursive Suite Hierarchy Implementation
+// ============================================
+async function openModalForSuitesRecursive(plan) {
+    selectedPlanId = plan.id;
+
+    modalTitle.textContent = `Suites in "${plan.name}"`;
+    modalBackContainer.style.display = "block";
+
+    // Back Button Logic
+    modalBackBtn.onclick = () => {
+        openModalForPlans();
+    };
+
+    // Enable "Create Suite"
+    createSuiteBtn.style.display = "block";
+
+    const cacheKey = `${selectedProject}-${plan.id}`;
+
+    // Check cache first
+    if (suiteHierarchyCache.has(cacheKey)) {
+        console.log(`[Cache] Using cached hierarchy for plan ${plan.id}`);
+        const rootSuite = suiteHierarchyCache.get(cacheKey);
+        modalTreeContainer.innerHTML = "";
+
+        // Render children of root suite
+        if (rootSuite.children && rootSuite.children.length > 0) {
+            renderModalSuiteTree(rootSuite.children, modalTreeContainer, 0, plan);
+        } else {
+            modalTreeContainer.innerHTML = `<div style="padding:12px;">No suites found.</div>`;
+        }
+        return;
+    }
+
+    // Not in cache - fetch recursively with progress
+    modalTreeContainer.innerHTML = `<div style="padding:12px; text-align:center;">
+        <div>Loading hierarchy...</div>
+        <div id="hierarchyProgress" style="margin-top:8px; color:var(--text-muted); font-size:12px;">Starting...</div>
+    </div>`;
+
+    const progressDiv = document.getElementById("hierarchyProgress");
+
+    // Setup progress listener
+    if (window.api.onSuiteHierarchyProgress) {
+        window.api.onSuiteHierarchyProgress((progress) => {
+            if (progressDiv) {
+                progressDiv.textContent = `Fetched ${progress.current} suite(s)... (${progress.name})`;
+            }
+        });
+    }
+
+    const inputs = validateInputs();
+    try {
+        const rootSuite = await window.api.fetchSuiteHierarchy({
+            ...inputs,
+            project: selectedProject,
+            planId: plan.id
+        });
+
+        console.log(`[Hierarchy] Fetched complete tree for plan ${plan.id}`);
+
+        // Cache the result
+        suiteHierarchyCache.set(cacheKey, rootSuite);
+
+        modalTreeContainer.innerHTML = "";
+
+        // Render children of root suite
+        if (rootSuite.children && rootSuite.children.length > 0) {
+            renderModalSuiteTree(rootSuite.children, modalTreeContainer, 0, plan);
+        } else {
+            modalTreeContainer.innerHTML = `<div style="padding:12px;">No suites found.</div>`;
+        }
+
+    } catch (err) {
+        modalTreeContainer.innerHTML = `<div style="color:var(--danger); padding:12px;">Failed to load suites: ${err.message}</div>`;
+    }
 }
