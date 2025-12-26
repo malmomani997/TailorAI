@@ -107,14 +107,13 @@
             </div>
 
             <button id="createSuite" class="secondary" style="width:100%; display:none;">+ Create New Suite</button>
-
-            <div id="console" class="console"></div>
           </div>
 
           <!-- RIGHT PANEL -->
           <div class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h2 style="margin: 0;">Test Cases</h2>
+            <!-- Toolbar -->
+            <div class="panel-toolbar">
+              <h2>Test Cases</h2>
               <div style="display: flex; gap: 8px;">
                 <button id="exportExcel" class="secondary">Export Excel</button>
                 <button id="importExcel" class="secondary">Import Excel</button>
@@ -125,7 +124,14 @@
 
             <div id="testCaseTable" class="table-wrapper">
               <div class="empty-state">
-                No test cases loaded. Click "Load Projects" to begin.
+                <div class="empty-icon">🧪</div>
+                <h3>No Test Cases Loaded</h3>
+                <p>Follow these steps to get started:</p>
+                <ol class="empty-steps">
+                  <li>Enter your <strong>Organization URL</strong> and <strong>PAT</strong>.</li>
+                  <li>Select a <strong>Project</strong> from the dropdown.</li>
+                  <li>Click <strong>Select Plan & Suite</strong> to choose your test cases.</li>
+                </ol>
               </div>
             </div>
           </div>
@@ -165,6 +171,9 @@
       </div>
     </div>
   </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
 
 </body>
 

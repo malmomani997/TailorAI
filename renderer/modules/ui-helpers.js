@@ -1,20 +1,37 @@
 
 import { consoleBox, orgInput, patInput } from './elements.js';
 
+// Toast Helper
 export function log(message, type = "info") {
-    const colors = {
-        info: "#111827",
-        success: "#065f46",
-        warning: "#92400e",
-        error: "#7f1d1d"
-    };
+    const container = document.getElementById('toast-container');
+    if (!container) return;
 
-    const line = document.createElement("div");
-    line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-    line.style.color = colors[type] || colors.info;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
 
-    consoleBox.appendChild(line);
-    consoleBox.scrollTop = consoleBox.scrollHeight;
+    // Icon Selection
+    let icon = "ℹ️";
+    if (type === 'success') icon = "✅";
+    if (type === 'error') icon = "❌";
+    if (type === 'warning') icon = "⚠️";
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-content">
+            <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+            <div>${message}</div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-remove
+    setTimeout(() => {
+        toast.classList.add('fadeOut');
+        toast.addEventListener('animationend', () => {
+            if (toast.parentElement) toast.remove();
+        });
+    }, 4000);
 }
 
 export function getPat() {
