@@ -26,6 +26,7 @@ function createMainWindow() {
         width: 1400,
         height: 900,
         title: "Tailor AI",
+        autoHideMenuBar: true, // Hides the default menu bar
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             contextIsolation: true,

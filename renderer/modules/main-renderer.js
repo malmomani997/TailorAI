@@ -19,13 +19,19 @@ import { log, validateInputs } from './ui-helpers.js';
 import { renderTestCaseTable, serializeSteps } from './table.js';
 import { initGlobalDropdown } from './user-search.js';
 
+import { initRouter } from './router.js';
+
 // ===============================
 // INITIALIZATION
 // ===============================
 if (document.body) {
     initGlobalDropdown();
+    initRouter();
 } else {
-    document.addEventListener("DOMContentLoaded", initGlobalDropdown);
+    document.addEventListener("DOMContentLoaded", () => {
+        initGlobalDropdown();
+        initRouter();
+    });
 }
 
 // ===============================

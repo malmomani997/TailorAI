@@ -4,110 +4,150 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tailor AI</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
   <link rel="stylesheet" href="styles.css" />
-
 </head>
 
 <body>
 
-  <!-- ================= HEADER ================= -->
-
-  <header>
-    <div>
-      <h1>Tailor AI</h1>
-      <span>Azure DevOps Test Case Manager</span>
-    </div>
-  </header>
-
-  <!-- ================= MAIN ================= -->
-
-  <div class="container">
-
-    <!-- ===== LEFT PANEL ===== -->
-
-    <div class="panel">
-      <h2>Azure DevOps</h2>
-
-      <label for="org">Organization URL</label>
-      <input id="org" placeholder="https://devops.det.gov.ae/DefaultCollection" />
-
-      <label for="pat">Personal Access Token (PAT)</label>
-      <input id="pat" type="password" placeholder="Enter your Azure DevOps PAT" />
-
-      <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-        Create PAT in Azure DevOps: User Settings → Personal Access Tokens
-      </p>
-
-      <label for="projects">Project</label>
-      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-        <select id="projects" style="flex: 1;"></select>
-        <button id="loadProjects" class="secondary" style="padding: 4px 12px;" title="Reload Projects">↻</button>
-      </div>
-
-      <div style="margin-bottom: 8px;">
-        <label style="margin-bottom: 4px;">Current Context</label>
-        <div id="currentContextDisplay" style="
-            background: #fff; 
-            border: 1px solid var(--border); 
-            padding: 12px; 
-            border-radius: var(--radius-sm); 
-            font-size: 13px;
-            color: var(--text-muted);
-            font-style: italic;
-            margin-bottom: 8px;
-        ">
-          No Plan or Suite selected.
-        </div>
-        <button id="openSuitePickerBtn" style="width:100%;" disabled>Select Plan & Suite</button>
-      </div>
-
-      <!-- Create Suite (Hidden by default) -->
-      <button id="createSuite" class="secondary" style="width:100%; display:none;">+ Create New Suite</button>
-
-      <div id="console" class="console"></div>
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="appSidebar">
+    <!-- Toggle Button -->
+    <div class="sidebar-toggle" id="sidebarToggle">
+      ‹
     </div>
 
-    <!-- ===== RIGHT PANEL ===== -->
+    <div class="sidebar-header">
+      <h1>
+        Tailor AI
+        <span class="sidebar-brand-badge">BETA</span>
+      </h1>
+    </div>
 
-    <div class="panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="margin: 0;">Test Cases</h2>
-        <div style="display: flex; gap: 8px;">
-          <button id="exportExcel" class="secondary">Export Excel</button>
-          <button id="importExcel" class="secondary">Import Excel</button>
-          <button id="submitTestCases">Add New Test Cases</button>
-          <button id="addNewTestCase" class="secondary">+ Add New</button>
+    <nav class="nav-links">
+      <a class="nav-item" data-view="view-dashboard">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item active" data-view="view-test-manager">
+        <span class="nav-icon">🧪</span>
+        <span>Test Manager</span>
+      </a>
+      <a class="nav-item" data-view="view-settings">
+        <span class="nav-icon">⚙️</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      v1.2.0 · Internal QA Tool
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <div class="main-content">
+
+    <header>
+      <!-- Header content if needed, currently empty or just breadcrumbs could go here -->
+      <div style="font-weight: 600; color: var(--text-primary);" id="page-title">
+        Test Manager
+      </div>
+    </header>
+
+    <div class="view-container">
+
+      <!-- ===== VIEW: DASHBOARD ===== -->
+      <div id="view-dashboard" class="view">
+        <div class="placeholder-view">
+          <div class="placeholder-icon">📊</div>
+          <h3>Dashboard Coming Soon</h3>
+          <p>Analytics and reporting features are under development.</p>
         </div>
       </div>
 
+      <!-- ===== VIEW: TEST MANAGER (Existing) ===== -->
+      <div id="view-test-manager" class="view active">
+        <div class="container">
+          <!-- LEFT PANEL -->
+          <div class="panel">
+            <h2>Azure DevOps</h2>
 
+            <label for="org">Organization URL</label>
+            <input id="org" placeholder="https://devops.det.gov.ae/DefaultCollection" />
 
-      <div id="testCaseTable" class="table-wrapper">
-        <div class="empty-state">
-          No test cases loaded. Click "Load Projects" to begin.
+            <label for="pat">Personal Access Token (PAT)</label>
+            <input id="pat" type="password" placeholder="Enter your Azure DevOps PAT" />
+
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+              Create PAT in Azure DevOps: User Settings → Personal Access Tokens
+            </p>
+
+            <label for="projects">Project</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <select id="projects" style="flex: 1;"></select>
+              <button id="loadProjects" class="secondary" style="padding: 4px 12px;" title="Reload Projects">↻</button>
+            </div>
+
+            <div style="margin-bottom: 8px;">
+              <label style="margin-bottom: 4px;">Current Context</label>
+              <div id="currentContextDisplay" style="
+                  background: #fff; 
+                  border: 1px solid var(--border); 
+                  padding: 12px; 
+                  border-radius: var(--radius-sm); 
+                  font-size: 13px;
+                  color: var(--text-muted);
+                  font-style: italic;
+                  margin-bottom: 8px;
+              ">
+                No Plan or Suite selected.
+              </div>
+              <button id="openSuitePickerBtn" style="width:100%;" disabled>Select Plan & Suite</button>
+            </div>
+
+            <button id="createSuite" class="secondary" style="width:100%; display:none;">+ Create New Suite</button>
+
+            <div id="console" class="console"></div>
+          </div>
+
+          <!-- RIGHT PANEL -->
+          <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="margin: 0;">Test Cases</h2>
+              <div style="display: flex; gap: 8px;">
+                <button id="exportExcel" class="secondary">Export Excel</button>
+                <button id="importExcel" class="secondary">Import Excel</button>
+                <button id="submitTestCases">Add New Test Cases</button>
+                <button id="addNewTestCase" class="secondary">+ Add New</button>
+              </div>
+            </div>
+
+            <div id="testCaseTable" class="table-wrapper">
+              <div class="empty-state">
+                No test cases loaded. Click "Load Projects" to begin.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
+      <!-- ===== VIEW: SETTINGS ===== -->
+      <div id="view-settings" class="view">
+        <div class="placeholder-view">
+          <div class="placeholder-icon">⚙️</div>
+          <h3>Settings</h3>
+          <p>Application preferences will appear here.</p>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- ================= FOOTER ================= -->
-
-  <footer>
-    Tailor AI · Internal QA Tool
-  </footer>
-
-  <!-- ================= SCRIPT ================= -->
-
+  <!-- SCRIPT -->
   <script type="module" src="./modules/main-renderer.js"></script>
 
-  <!-- Datalist for User Autocomplete -->
+  <!-- Datalist -->
   <datalist id="projectUsersList"></datalist>
 
   <!-- SUITE PICKER MODAL -->
@@ -118,14 +158,10 @@
         <button id="closeSuitePicker" class="secondary" style="padding: 4px 12px;">Close</button>
       </div>
       <div class="modal-body">
-        <!-- Back Button for Drill Down -->
         <div id="modalBackContainer" style="margin-bottom:12px; display:none;">
           <button id="modalBackToPlans" class="modal-back-btn">← Back to Plans</button>
         </div>
-
-        <div id="modalTreeContainer" class="suite-tree-container">
-          <!-- Tree content goes here -->
-        </div>
+        <div id="modalTreeContainer" class="suite-tree-container"></div>
       </div>
     </div>
   </div>
