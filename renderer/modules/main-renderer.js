@@ -11,28 +11,67 @@ import {
     submitTestCasesBtn,
     addNewTestCaseBtn,
     suitePickerModal,
-    currentContextDisplay
+    currentContextDisplay,
+    saveDraftBtn,
+    navReviews
 } from './elements.js';
 import { fetchProjects, fetchProjectUsers } from './project.js';
 import { openModalForPlans, createSuite, fetchTestCasesFromSuite } from './suite-tree.js';
 import { log, validateInputs } from './ui-helpers.js';
 import { renderTestCaseTable, serializeSteps } from './table.js';
 import { initGlobalDropdown } from './user-search.js';
+import { apiClient } from './apiClient.js';
+import { initReviewDashboard } from './review-manager.js';
 
 import { initRouter } from './router.js';
 
 // ===============================
 // INITIALIZATION
 // ===============================
-if (document.body) {
+const checkAuth = () => {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) {
+        window.location.href = 'login.html';
+        return;
+    }
+    const user = JSON.parse(userJson);
+
+    // Auto-fill inputs if available
+    const orgInput = document.getElementById('org');
+    const patInput = document.getElementById('pat');
+
+    if (orgInput && user.orgUrl) orgInput.value = user.orgUrl;
+    if (patInput && user.pat) patInput.value = user.pat;
+
+    // Show/Hide Role specific elements
+    if (user.role === 'Lead') {
+        if (navReviews) navReviews.style.display = 'flex';
+        // Leads can submit directly too, so keep submit btn
+    } else {
+        // Tester specific UI
+        if (saveDraftBtn) saveDraftBtn.style.display = 'block';
+        if (submitTestCasesBtn) submitTestCasesBtn.style.display = 'none'; // Force Draft flow
+    }
+};
+
+const init = () => {
+    checkAuth();
     initGlobalDropdown();
     initRouter();
+    initReviewDashboard();
+};
+
+if (document.body) {
+    init();
 } else {
-    document.addEventListener("DOMContentLoaded", () => {
-        initGlobalDropdown();
-        initRouter();
-    });
+    document.addEventListener("DOMContentLoaded", init);
 }
+
+// Logout Handler
+window.logout = () => {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+};
 
 // ===============================
 // PROJECT & USER EVENTS
@@ -121,8 +160,49 @@ exportExcelBtn.onclick = async () => {
 };
 
 // ===============================
-// TEST CASE ACTIONS (ADD / SUBMIT)
+// TEST CASE ACTIONS (ADD / SUBMIT / DRAFT)
 // ===============================
+saveDraftBtn.onclick = async () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    // Validate inputs locally (ensure title exists)
+    const newCases = state.testCases.filter(tc => !tc.isExisting);
+    if (!newCases.length) {
+        alert("No new test cases to save as draft.");
+        return;
+    }
+
+    try {
+        saveDraftBtn.disabled = true;
+        log(`Saving ${newCases.length} drafts to Pending Reviews...`);
+
+        let successCount = 0;
+        for (const tc of newCases) {
+            if (!tc.title) continue;
+
+            await apiClient.createDraft({
+                title: tc.title,
+                steps: tc.steps, // Array of {action, expected}
+                expectedResult: tc.expected,
+                authorId: user.id,
+                suiteId: state.selectedSuiteId // Optional context
+            });
+            successCount++;
+        }
+
+        log(`Saved ${successCount} drafts successfully!`, "success");
+
+        // Clear new cases from table
+        state.testCases = state.testCases.filter(tc => tc.isExisting);
+        renderTestCaseTable();
+
+    } catch (err) {
+        log(`Failed to save drafts: ${err.message}`, "error");
+    } finally {
+        saveDraftBtn.disabled = false;
+    }
+};
+
 addNewTestCaseBtn.onclick = () => {
     state.testCases.push({
         title: "",

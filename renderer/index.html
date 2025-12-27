@@ -38,6 +38,14 @@
         <span class="nav-icon">⚙️</span>
         <span>Settings</span>
       </a>
+      <a class="nav-item" data-view="view-review-manager" id="nav-reviews" style="display:none;">
+        <span class="nav-icon">👀</span>
+        <span>Reviews</span>
+      </a>
+      <a class="nav-item" onclick="window.logout()" style="margin-top: auto;">
+        <span class="nav-icon">🚪</span>
+        <span>Logout</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -110,7 +118,10 @@
               <div style="display: flex; gap: 8px;">
                 <button id="exportExcel" class="secondary">Export Excel</button>
                 <button id="importExcel" class="secondary">Import Excel</button>
-                <button id="submitTestCases">Add New Test Cases</button>
+                <button id="submitTestCases" title="Push directly to Azure">Add New Test Cases</button>
+                <button id="saveDraftBtn" class="secondary"
+                  style="display:none; border: 1px solid var(--accent-primary); color: var(--accent-primary);">Save
+                  Draft</button>
                 <button id="addNewTestCase" class="secondary">+ Add New</button>
               </div>
             </div>
@@ -137,6 +148,22 @@
           <div class="placeholder-icon">⚙️</div>
           <h3>Settings</h3>
           <p>Application preferences will appear here.</p>
+        </div>
+      </div>
+
+      <!-- ===== VIEW: REVIEW DASHBOARD (Leads Only) ===== -->
+      <div id="view-review-manager" class="view">
+        <div class="container" style="flex-direction: column;">
+          <div class="panel-toolbar">
+            <h2>Pending Reviews</h2>
+            <button id="refreshReviewsBtn" class="secondary">Refresh</button>
+          </div>
+          <div id="reviewList" class="review-grid">
+            <!-- Reviews populated here -->
+            <div class="empty-state">
+              <h3>No Pending Reviews</h3>
+            </div>
+          </div>
         </div>
       </div>
 

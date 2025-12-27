@@ -1,5 +1,64 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+/* Review Grid */
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.review-card {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.review-card h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.review-card .meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+}
+
+.review-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
+}
+
+.review-actions button {
+    flex: 1;
+    padding: 6px;
+    font-size: 0.9rem;
+}
+
+.btn-approve {
+    background-color: #4caf50;
+    /* Green */
+    color: white;
+    border: none;
+}
+
+.btn-reject {
+    background-color: #f44336;
+    /* Red */
+    color: white;
+    border: none;
+}
+
+/* Original Styles */
 :root {
     /* Tailor 'Black & Beige' Palette (Restored) */
 

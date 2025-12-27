@@ -22,5 +22,11 @@ export const testCaseTable = document.getElementById("testCaseTable");
 
 export const importExcelBtn = document.getElementById("importExcel");
 export const submitTestCasesBtn = document.getElementById("submitTestCases");
+export const saveDraftBtn = document.getElementById("saveDraftBtn");
 export const addNewTestCaseBtn = document.getElementById("addNewTestCase");
 export const exportExcelBtn = document.getElementById("exportExcel");
+
+// Review Dashboard Elements
+export const navReviews = document.getElementById("nav-reviews");
+export const refreshReviewsBtn = document.getElementById("refreshReviewsBtn");
+export const reviewList = document.getElementById("reviewList");
