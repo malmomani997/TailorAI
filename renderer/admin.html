@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard | Tailor</title>
+    <link rel="stylesheet" href="index.css"> <!-- Reusing main styles -->
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-secondary);
+        }
+
+        .admin-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .user-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h4 {
+            margin: 0 0 4px 0;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .role-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            margin-left: 8px;
+        }
+
+        .permissions-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-header">
+        <div>
+            <h2 style="margin:0">Admin Dashboard</h2>
+            <span id="orgName" style="font-size:12px;color:var(--text-secondary)">Loading Org...</span>
+        </div>
+        <button id="logoutBtn" class="secondary">Logout</button>
+    </div>
+
+    <div class="admin-content">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
+            <h3>User Management</h3>
+            <button id="inviteUserBtn">+ Invite User</button>
+        </div>
+
+        <div id="usersList">
+            <!-- User Cards Injected Here -->
+            <div style="text-align:center; color:var(--text-muted)">Loading users...</div>
+        </div>
+    </div>
+
+    <!-- Simple Invite Modal -->
+    <div id="inviteModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3>Invite User</h3>
+            <input type="email" id="inviteUsername" placeholder="Work Email (name@company.com)"
+                style="width:100%; margin-bottom:10px;">
+            <input type="password" id="invitePassword" placeholder="Default Password"
+                style="width:100%; margin-bottom:10px;">
+            <select id="inviteRole" style="width:100%; margin-bottom:20px;">
+                <option value="Tester">Tester</option>
+                <option value="Lead">Lead</option>
+                <option value="Admin">Admin</option>
+            </select>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button id="cancelInvite" class="secondary">Cancel</button>
+                <button id="confirmInvite">Create User</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./modules/admin-dashboard.js"></script>
+</body>
+
+</html>

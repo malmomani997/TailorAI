@@ -4,6 +4,15 @@ import { testCaseTable } from './elements.js';
 import { escapeHtml, escapeXml, validateInputs, log } from './ui-helpers.js';
 import { handleUserSearch, hideUserListDelayed } from './user-search.js'; // Ensure these are imported so they are available, though they are window bound
 
+export function canDirectPush() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    // If user has specific flag, use it. Fallback to Lead role just in case.
+    if (user && user.canPushDirect !== undefined) {
+        return !!user.canPushDirect;
+    }
+    return user && user.role === 'Lead';
+}
+
 export function renderTestCaseTable() {
     if (!state.testCases.length) {
         testCaseTable.innerHTML = `
@@ -106,12 +115,16 @@ export function renderTestCaseTable() {
             <!-- Actions -->
             <td style="text-align:center;">
               <div style="display:flex;gap:4px;justify-content:center;">
-                  <button class="action-btn save-action" onclick="saveTestCase(${i})" title="Save">
+                  ${canDirectPush() ? `
+                  <button class="action-btn save-action" onclick="saveTestCase(${i})" title="Save Direct">
                     💾
                   </button>
                   <button class="action-btn delete-action" onclick="deleteTestCase(${i})" title="Delete">
                     🗑️
                   </button>
+                  ` : `
+                  <span style="font-size:11px; color:var(--text-muted); cursor:help;" title="Submit a Pull Request to change this item">🔒</span>
+                  `}
               </div>
             </td>
           </tr>

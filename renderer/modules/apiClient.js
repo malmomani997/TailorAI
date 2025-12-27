@@ -19,6 +19,30 @@ export const apiClient = {
         return response.json();
     },
 
+    async getUsers(role, orgUrl) {
+        let url = `${API_BASE}/users`;
+        const params = new URLSearchParams();
+        if (role) params.append('role', role);
+        if (orgUrl) params.append('orgUrl', orgUrl);
+
+        const fullUrl = `${url}?${params.toString()}`;
+        const response = await fetch(fullUrl);
+
+        if (!response.ok) {
+            const text = await response.text();
+            console.error(`[API] getUsers failed: ${response.status} ${response.statusText}`, text);
+            throw new Error(`Server Error (${response.status}): ${text.substring(0, 100)}`);
+        }
+
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error(`[API] Invalid JSON from ${fullUrl}:`, text);
+            throw new Error("Invalid format from server. Check console for details.");
+        }
+    },
+
     async createDraft(draftData) {
         const response = await fetch(`${API_BASE}/cases`, {
             method: 'POST',

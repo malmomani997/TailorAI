@@ -11,7 +11,10 @@ import {
     submitTestCasesBtn,
     addNewTestCaseBtn,
     suitePickerModal,
-    currentContextDisplay,
+    // In elements.js or initialization
+    // Just update the HTML text directly via ID since it's hardcoded in HTML
+    // But wait, the button text is in HTML. Let's update it there. 
+    // Skipping JS change for text, doing it in HTML next step.
     saveDraftBtn,
     navReviews
 } from './elements.js';
@@ -162,30 +165,92 @@ exportExcelBtn.onclick = async () => {
 // ===============================
 // TEST CASE ACTIONS (ADD / SUBMIT / DRAFT)
 // ===============================
+// ===============================
+// TEST CASE ACTIONS (ADD / SUBMIT / DRAFT)
+// ===============================
+let pendingDrafts = []; // Store drafts while selecting reviewer
+
+const reviewerModal = document.getElementById('reviewerModal');
+const closeReviewerModal = document.getElementById('closeReviewerModal');
+const reviewerSelect = document.getElementById('reviewerSelect');
+const confirmSaveDraftBtn = document.getElementById('confirmSaveDraft');
+
+closeReviewerModal.onclick = () => {
+    reviewerModal.style.display = 'none';
+};
+
 saveDraftBtn.onclick = async () => {
     const user = JSON.parse(localStorage.getItem('user'));
 
-    // Validate inputs locally (ensure title exists)
-    const newCases = state.testCases.filter(tc => !tc.isExisting);
-    if (!newCases.length) {
-        alert("No new test cases to save as draft.");
+    // Validate inputs locally
+    // We want to allow saving ANY case the user wants to propose changes for.
+    // So we use state.testCases (or careful selection).
+    // For now, let's assume we want to save ALL currently visible cases as a batch, 
+    // OR we could filter for Modified ones if we tracked dirty state.
+    // To keep it simple: Save ALL visible cases in the table to the Review Queue.
+    const casesToSave = state.testCases;
+
+    if (!casesToSave.length) {
+        alert("No test cases to save as draft.");
         return;
     }
 
+    pendingDrafts = casesToSave; // Store for later
+
+    // Open Modal
+    reviewerModal.style.display = 'flex';
+    reviewerSelect.innerHTML = '<option value="" disabled selected>Loading Leads...</option>';
+
     try {
-        saveDraftBtn.disabled = true;
-        log(`Saving ${newCases.length} drafts to Pending Reviews...`);
+        // Fetch Leads from the same Organization
+        const leads = await apiClient.getUsers('Lead', user.orgUrl);
+        reviewerSelect.innerHTML = '<option value="" disabled selected>Select a Reviewer...</option>';
+
+        if (leads.length === 0) {
+            reviewerSelect.innerHTML += '<option value="" disabled>No Leads found in your Org</option>';
+        }
+
+        leads.forEach(lead => {
+            // Don't assign to self if tester is also a lead (unlikely but good safety)
+            const option = document.createElement('option');
+            option.value = lead.id;
+            option.textContent = lead.username;
+            reviewerSelect.appendChild(option);
+        });
+
+    } catch (err) {
+        log(`Failed to fetch reviewers: ${err.message}`, "error");
+        reviewerSelect.innerHTML = '<option value="" disabled>Error loading reviewers</option>';
+    }
+};
+
+confirmSaveDraftBtn.onclick = async () => {
+    const reviewerId = reviewerSelect.value;
+    if (!reviewerId) {
+        alert("Please select a reviewer.");
+        return;
+    }
+
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    try {
+        confirmSaveDraftBtn.disabled = true;
+        reviewerModal.style.display = 'none';
+
+        log(`Submitting PR with ${pendingDrafts.length} changes (Reviewer: ${reviewerId})...`);
 
         let successCount = 0;
-        for (const tc of newCases) {
+        for (const tc of pendingDrafts) {
             if (!tc.title) continue;
 
             await apiClient.createDraft({
                 title: tc.title,
-                steps: tc.steps, // Array of {action, expected}
+                steps: tc.steps,
                 expectedResult: tc.expected,
                 authorId: user.id,
-                suiteId: state.selectedSuiteId // Optional context
+                suiteId: state.selectedSuiteId,
+                reviewerId: reviewerId,
+                azureId: tc.isExisting ? tc.id : null // Pass Azure ID if it's an update
             });
             successCount++;
         }
@@ -199,7 +264,8 @@ saveDraftBtn.onclick = async () => {
     } catch (err) {
         log(`Failed to save drafts: ${err.message}`, "error");
     } finally {
-        saveDraftBtn.disabled = false;
+        confirmSaveDraftBtn.disabled = false;
+        pendingDrafts = [];
     }
 };
 
