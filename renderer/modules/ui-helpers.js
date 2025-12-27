@@ -1,5 +1,5 @@
 
-import { consoleBox, orgInput, patInput } from './elements.js';
+import { orgInput, patInput } from './elements.js';
 
 // Toast Helper
 export function log(message, type = "info") {

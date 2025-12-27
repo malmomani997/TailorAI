@@ -380,6 +380,8 @@ header {
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
+    /* Helper for children to scroll */
 }
 
 /* =========================
@@ -560,6 +562,23 @@ button#submitTestCases:hover {
     background: #ffffff;
     box-shadow: var(--shadow-sm);
     position: relative;
+    min-height: 0;
+    /* Critical for nested flex scrolling */
+}
+
+/* Scrollbar for table wrapper */
+.table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 3px;
 }
 
 .empty-state {
@@ -890,18 +909,7 @@ td:nth-child(8) {
    CONSOLE
    ========================= */
 
-.console-panel pre,
-#console {
-    margin: 0;
-    padding: 12px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    height: 100%;
-    overflow-y: auto;
-    background: var(--console-bg);
-    color: var(--text-primary);
-    border-top: 1px solid var(--border);
-}
+/* Console styles removed */
 
 /* =========================
    FOOTER

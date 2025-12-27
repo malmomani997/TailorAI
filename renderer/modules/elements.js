@@ -17,7 +17,7 @@ export const modalTitle = document.getElementById("modalTitle");
 export const modalBackContainer = document.getElementById("modalBackContainer");
 export const modalBackBtn = document.getElementById("modalBackToPlans");
 
-export const consoleBox = document.getElementById("console");
+
 export const testCaseTable = document.getElementById("testCaseTable");
 
 export const importExcelBtn = document.getElementById("importExcel");

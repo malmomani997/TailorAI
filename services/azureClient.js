@@ -347,10 +347,11 @@ async function fetchTestPlans(orgUrl, project, pat) {
 /* ================= SUITES ================= */
 
 async function fetchSuites(orgUrl, project, planId, pat) {
-    // Strategy: Use 'asTreeView=true' to get the correct hierarchy and order directly from Azure
-    console.log(`[Suites] Fetching suites for Plan ${planId} via REST API (asTreeView)...`);
-    // 'asTreeView=true' returns the nested structure
-    const linkUrl = `${orgUrl}/${project}/_apis/test/plans/${planId}/suites?asTreeView=true&api-version=5.0`;
+    // Strategy: Fetch ALL suites as a flat list (fast) and let the renderer build the tree.
+    // 'asTreeView' proved unreliable for parenting info on some configurations.
+    console.log(`[Suites] Fetching ALL suites for Plan ${planId} (Flat List)...`);
+
+    const linkUrl = `${orgUrl}/${project}/_apis/test/plans/${planId}/suites?api-version=5.0`;
     const auth = Buffer.from(`:${pat}`).toString('base64');
 
     try {
@@ -360,33 +361,7 @@ async function fetchSuites(orgUrl, project, planId, pat) {
 
         if (res.data && res.data.value) {
             const suites = res.data.value;
-            console.log(`[Suites] Found ${suites.length} suites via REST.`);
-
-            // DEBUG: Verification
-            if (suites.length > 0) {
-                const root = suites[0]; // Usually the root suite in expand=true response
-                console.log("[DEBUG] Root Suite:", root.name, `(ID: ${root.id})`);
-
-                if (root.suites) {
-                    console.log("[DEBUG] Root Children (API Order):", JSON.stringify(root.suites.map(s => ({ id: s.id, name: s.name })), null, 2));
-                } else {
-                    console.log("[DEBUG] Root has no 'suites' property.");
-                }
-
-                const ids = new Set(suites.map(s => s.id));
-                let orphaned = 0;
-                let hasParent = 0;
-
-                suites.forEach(s => {
-                    if (s.parentSuite) {
-                        hasParent++;
-                        const pId = s.parentSuite.id ? Number(s.parentSuite.id) : Number(s.parentSuite);
-                        if (!ids.has(pId)) orphaned++;
-                    }
-                });
-                console.log(`[DEBUG] Integrity Check: ${hasParent} suites have parents. ${orphaned} are orphaned (parent not in list).`);
-            }
-
+            console.log(`[Suites] Found ${suites.length} suites via REST (Flat).`);
             return suites;
         }
     } catch (err) {

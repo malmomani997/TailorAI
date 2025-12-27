@@ -97,44 +97,110 @@ export async function openModalForSuites(plan) {
         return;
     }
 
-    // Not in cache - fetch recursively with progress
+    // Not in cache - fetch using optimized 'asTreeView'
     modalTreeContainer.innerHTML = `<div style="padding:24px; text-align:center;">
         <div class="spinner" style="margin:0 auto 16px;"></div>
         <div style="font-weight:500; margin-bottom:8px;">Loading hierarchy...</div>
-        <div id="hierarchyProgress" style="color:var(--text-muted); font-size:12px;">Starting...</div>
     </div>`;
-
-    const progressDiv = document.getElementById("hierarchyProgress");
-
-    // Setup progress listener
-    if (window.api.onSuiteHierarchyProgress) {
-        window.api.onSuiteHierarchyProgress((progress) => {
-            if (progressDiv) {
-                progressDiv.textContent = `Fetched ${progress.current} suite(s)... (${progress.name})`;
-            }
-        });
-    }
 
     const inputs = validateInputs();
     try {
-        const rootSuite = await window.api.fetchSuiteHierarchy({
+        // FAST FETCH: Get Flat List
+        const flatSuites = await window.api.fetchSuites({
             ...inputs,
             project: state.selectedProject,
             planId: plan.id
         });
 
-        console.log(`[Hierarchy] Fetched complete tree for plan ${plan.id}`);
+        console.log(`[Hierarchy] Fetched ${flatSuites?.length} suites (Flat). Building Tree...`);
 
-        // Cache the result
-        state.suiteHierarchyCache.set(cacheKey, rootSuite);
+        if (!flatSuites || flatSuites.length === 0) {
+            modalTreeContainer.innerHTML = `<div style="padding:12px;">No suites found.</div>`;
+            return;
+        }
+
+        // ======================================
+        // BUILD TREE FROM FLAT LIST
+        // ======================================
+        const suiteMap = new Map();
+        const rootSuites = [];
+
+        // 1. Initialize Map
+        flatSuites.forEach(s => {
+            // Ensure children array
+            s.children = [];
+            suiteMap.set(Number(s.id), s);
+        });
+
+        // 2. Link Parents
+        flatSuites.forEach(s => {
+            // API compatibility: Data might be in 'parentSuite' OR 'parent'
+            const parentRef = s.parentSuite || s.parent;
+
+            if (parentRef) {
+                // If it has a parent, try to find it
+                const pId = parentRef.id ? Number(parentRef.id) : Number(parentRef);
+                const parent = suiteMap.get(pId);
+
+                if (parent) {
+                    parent.children.push(s);
+                } else {
+                    // Parent not found in list -> Treat as Root (or Orphan)
+                    rootSuites.push(s);
+                }
+            } else {
+                // No parent -> Root
+                rootSuites.push(s);
+            }
+        });
+
+        console.log(`[Hierarchy] Tree built. Roots: ${rootSuites.length}`);
+
+        // 3. Identify likely MAIN Root
+        // Usually there is 1 true root for the Plan.
+        // If we have multiple, just search for the one that seems top-level or show all.
+
+        let displayRoot = null;
+        if (rootSuites.length === 1) {
+            displayRoot = rootSuites[0];
+        } else {
+            // If multiple roots, create a fake root or just use the first/most relevant?
+            // Usually the Plan Root Suite has the SAME NAME as the Plan (often).
+            // Or we just display all roots.
+            // Let's create a virtual root container if we have to, 
+            // BUT actually renderModalSuiteTree expects a LIST of children.
+            // So we can just pass 'rootSuites' as the children of a "Virtual" root.
+            displayRoot = {
+                id: "root",
+                name: "Plan Root",
+                children: rootSuites
+            };
+        }
+
+        // Cache the result (Virtual Root or Real Root)
+        state.suiteHierarchyCache.set(cacheKey, displayRoot);
 
         modalTreeContainer.innerHTML = "";
 
-        // Render children of root suite
-        if (rootSuite.children && rootSuite.children.length > 0) {
-            renderModalSuiteTree(rootSuite.children, modalTreeContainer, 0, plan);
+        // Render children of root (or the valid roots themselves)
+        if (displayRoot.children && displayRoot.children.length > 0) {
+            // If the root looks like the plan root, show its children?
+            // ADO usually has 1 Root Suite.
+            // If we have that 1 root, we usually want to show IT (expanded) or its children?
+            // The previous UI showed the Root. Let's show the Root(s).
+
+            // If displayRoot is a Real Suite (from ADO), we pass [displayRoot] to render
+            if (displayRoot.id !== "root") {
+                renderModalSuiteTree([displayRoot], modalTreeContainer, 0, plan);
+                // Auto-expand the root?
+                // That requires finding the DOM element. Let's keep it simple.
+            } else {
+                // Virtual root -> render its children (the actual top level suites)
+                renderModalSuiteTree(displayRoot.children, modalTreeContainer, 0, plan);
+            }
+
         } else {
-            modalTreeContainer.innerHTML = `<div style="padding:12px;">No suites found.</div>`;
+            modalTreeContainer.innerHTML = `<div style="padding:12px;">No suites found in tree.</div>`;
         }
 
     } catch (err) {
