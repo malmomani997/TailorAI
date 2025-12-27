@@ -277,6 +277,7 @@ function renderModalSuiteTree(suites, container, depth, plan) {
 // ===============================
 async function selectSuite(plan, suite) {
     state.selectedSuiteId = suite.id;
+    state.selectedSuiteName = suite.name; // Store for Review Grouping
 
     currentContextDisplay.innerHTML = `
         <div style="font-weight:600; color:var(--text-primary); margin-bottom:4px;">${escapeHtml(plan.name)}</div>

@@ -250,7 +250,10 @@ confirmSaveDraftBtn.onclick = async () => {
                 authorId: user.id,
                 suiteId: state.selectedSuiteId,
                 reviewerId: reviewerId,
-                azureId: tc.isExisting ? tc.id : null // Pass Azure ID if it's an update
+                azureId: tc.isExisting ? tc.id : null,
+                preconditions: tc.preconditions,
+                testType: tc.testType,
+                suiteTitle: state.selectedSuiteName || 'Unknown Suite'
             });
             successCount++;
         }

@@ -1,61 +1,186 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Review Grid */
-.review-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-    padding: 16px;
-    overflow-y: auto;
+/* GitHub-Style Review UI */
+:root {
+    --gh-bg: #ffffff;
+    --gh-bg-secondary: #f6f8fa;
+    --gh-border: #d0d7de;
+    --gh-text: #24292f;
+    --gh-text-muted: #57606a;
+    --gh-link: #0969da;
+    --gh-btn-green: #2da44e;
+    --gh-btn-danger: #cf222e;
+    --gh-state-open: #2da44e;
+    --gh-state-merged: #8250df;
+    --gh-state-draft: #6e7781;
 }
 
-.review-card {
-    background-color: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 16px;
+.review-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
+    padding: 24px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
-.review-card h4 {
-    margin: 0;
-    color: var(--text-primary);
+/* The "PR" Card */
+.pr-card {
+    background: var(--gh-bg);
+    border: 1px solid var(--gh-border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.review-card .meta {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+/* Header: Title, Badge, Meta */
+.pr-header {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    background: var(--gh-bg);
+}
+
+.pr-icon {
+    margin-top: 4px;
+}
+
+/* Status Icon (Open PR symbol) */
+.icon-open {
+    color: var(--gh-state-open);
+}
+
+.icon-update {
+    color: var(--gh-link);
+}
+
+.pr-main {
+    flex: 1;
+}
+
+.pr-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gh-text);
+    margin: 0 0 4px 0;
+    cursor: pointer;
+}
+
+.pr-title:hover {
+    color: var(--gh-link);
+}
+
+.pr-meta {
+    font-size: 12px;
+    color: var(--gh-text-muted);
+}
+
+/* Details Section (The "Files Changed" view) */
+.pr-details {
+    display: none;
+    background: var(--gh-bg);
+    border-top: 1px solid var(--gh-border);
+}
+
+.pr-details.show {
+    display: block;
+}
+
+/* Steps "Diff" View */
+.pr-file-header {
+    background: var(--gh-bg-secondary);
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--gh-border);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--gh-text-muted);
     display: flex;
     justify-content: space-between;
 }
 
-.review-actions {
+.pr-content {
+    padding: 16px;
+}
+
+.pr-description {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid var(--gh-border);
+    border-radius: 6px;
+}
+
+.pr-code-block {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pr-code-block th {
+    text-align: left;
+    color: var(--gh-text-muted);
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--gh-border);
+}
+
+.pr-code-block td {
+    padding: 4px 8px;
+    vertical-align: top;
+    color: var(--gh-text);
+    line-height: 1.5;
+}
+
+.blob-num {
+    color: #6e7781;
+    /* line numbers */
+    text-align: right;
+    width: 1%;
+    min-width: 30px;
+    user-select: none;
+    border-right: 1px solid var(--gh-border);
+}
+
+.blob-code {
+    white-space: pre-wrap;
+}
+
+/* Action Bar (Review Bar) */
+.pr-actions {
+    background: var(--gh-bg-secondary);
+    border-top: 1px solid var(--gh-border);
+    padding: 12px 16px;
     display: flex;
+    justify-content: flex-end;
     gap: 8px;
-    margin-top: auto;
-    padding-top: 12px;
 }
 
-.review-actions button {
-    flex: 1;
-    padding: 6px;
-    font-size: 0.9rem;
-}
-
-.btn-approve {
-    background-color: #4caf50;
-    /* Green */
+.btn-gh-primary {
+    background: var(--gh-btn-green);
     color: white;
-    border: none;
+    border: 1px solid rgba(27, 31, 36, 0.15);
+    border-radius: 6px;
+    font-weight: 600;
 }
 
-.btn-reject {
-    background-color: #f44336;
-    /* Red */
+.btn-gh-primary:hover {
+    background: #2c974b;
     color: white;
-    border: none;
+}
+
+.btn-gh-danger {
+    color: var(--gh-btn-danger);
+    background: var(--gh-bg);
+    border: 1px solid var(--gh-border);
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.btn-gh-danger:hover {
+    background: #fff0f0;
+    border-color: var(--gh-btn-danger);
 }
 
 /* Original Styles */

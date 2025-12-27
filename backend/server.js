@@ -156,10 +156,10 @@ app.patch('/users/:id', (req, res) => {
 
 // Create Draft Case
 app.post('/cases', (req, res) => {
-    const { title, steps, expectedResult, authorId, suiteId, reviewerId, azureId } = req.body;
-    const stmt = db.prepare('INSERT INTO cases (title, steps, expected_result, author_id, suite_id, assigned_reviewer_id, azure_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const { title, steps, expectedResult, authorId, suiteId, suiteTitle, reviewerId, azureId, preconditions, testType } = req.body;
+    const stmt = db.prepare('INSERT INTO cases (title, steps, expected_result, author_id, suite_id, suite_title, assigned_reviewer_id, azure_id, preconditions, test_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 
-    stmt.run(title, JSON.stringify(steps), expectedResult, authorId, suiteId, reviewerId, azureId, function (err) {
+    stmt.run(title, JSON.stringify(steps), expectedResult, authorId, suiteId, suiteTitle, reviewerId, azureId, preconditions, testType, function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID, status: 'PENDING' });
     });

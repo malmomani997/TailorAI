@@ -23,11 +23,14 @@ function initDatabase() {
     db.run(`CREATE TABLE IF NOT EXISTS cases (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT,
+      preconditions TEXT, 
       steps TEXT, -- JSON string
       expected_result TEXT,
+      test_type TEXT, 
       status TEXT DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED, PUSHED
       author_id INTEGER,
       suite_id TEXT, -- Optional: Target suite ID
+      suite_title TEXT, -- New: For grouping reviews
       assigned_reviewer_id INTEGER,
       azure_id INTEGER, -- Link to Azure Test Case
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -38,6 +41,9 @@ function initDatabase() {
     // Migrations (Run safe alters for existing DBs, though we prefer fresh for this dev)
     db.run("ALTER TABLE cases ADD COLUMN assigned_reviewer_id INTEGER", (err) => { });
     db.run("ALTER TABLE cases ADD COLUMN azure_id INTEGER", (err) => { });
+    db.run("ALTER TABLE cases ADD COLUMN preconditions TEXT", (err) => { });
+    db.run("ALTER TABLE cases ADD COLUMN test_type TEXT", (err) => { });
+    db.run("ALTER TABLE cases ADD COLUMN suite_title TEXT", (err) => { });
     db.run("ALTER TABLE users ADD COLUMN can_push_direct BOOLEAN DEFAULT 0", (err) => { });
   });
 }
