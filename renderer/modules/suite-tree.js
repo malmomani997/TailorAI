@@ -88,8 +88,12 @@ export async function openModalForSuites(plan) {
         const rootSuite = state.suiteHierarchyCache.get(cacheKey);
         modalTreeContainer.innerHTML = "";
 
-        // Render children of root suite
-        if (rootSuite.children && rootSuite.children.length > 0) {
+        // Check if root is Virtual or Real
+        if (rootSuite.id !== "root") {
+            // Real Suite -> Render it wrapped in array
+            renderModalSuiteTree([rootSuite], modalTreeContainer, 0, plan);
+        } else if (rootSuite.children && rootSuite.children.length > 0) {
+            // Virtual Root -> Render children
             renderModalSuiteTree(rootSuite.children, modalTreeContainer, 0, plan);
         } else {
             modalTreeContainer.innerHTML = `<div style="padding:12px;">No suites found.</div>`;
