@@ -1308,3 +1308,114 @@ footer {
         transform: translateY(10px);
     }
 }
+
+/* =========================
+   AUTH PAGES (Login/Register)
+   ========================= */
+
+.auth-body {
+    background-color: var(--bg-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    margin: 0;
+}
+
+.auth-card {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 400px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.auth-header {
+    text-align: center;
+}
+
+.auth-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+}
+
+.auth-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-form label {
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.auth-form input,
+.auth-form select {
+    width: 100%;
+}
+
+.auth-actions {
+    margin-top: 8px;
+}
+
+.auth-footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 16px;
+}
+
+.auth-footer a {
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.auth-footer a:hover {
+    color: var(--accent-brand);
+    text-decoration: underline;
+}
+
+.btn-auth {
+    background-color: var(--accent-primary);
+    color: white;
+    font-weight: 600;
+    width: 100%;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-auth:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
